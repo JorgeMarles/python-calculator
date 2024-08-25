@@ -3,12 +3,12 @@ from typing import List
 
 
 class Operator:
-    def __init__(self, num: str | int | int) -> None:
+    def __init__(self, num: str | int) -> None:
         self.num: int = 0
-        if isinstance(num, int | int) or Operator.isnumeric(num):
+        if isinstance(num, int) or Operator.isnumeric(num):
             self.num = int(num)
         else:
-            raise ValueError(f"{num} does not represent a number")
+            raise ValueError(f"{num} does not represent an integer number")
 
     def __str__(self) -> str:
         return str(self.num)
@@ -187,3 +187,11 @@ class MathExpression:
                     ok = False
                     break
         return x == 0 and ok
+
+if __name__ == "__main__":
+    expresion = input()
+    try:
+        mathexp = MathExpression(expresion)
+        print(mathexp.evaluate())
+    except Exception as excp:
+        print(f"{type(excp).__name__}: {excp}")
