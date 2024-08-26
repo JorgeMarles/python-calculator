@@ -19,16 +19,16 @@ class Operator:
     @staticmethod
     def isnumeric(s: str) -> bool:
         if s.startswith("-"):
-            s = s[1:]
+            return s[1:].isdigit()
         # for floating point:
-        # return s.replace('.', '', 1).isdigit()
+        # s.replace('.', '', 1).isdigit()
         return s.isdigit()
 
 
 class Operation:
     def __init__(self, op: str) -> None:
         if not Operation.is_op(op):
-            raise Exception(f"Unknown operation: {op}")
+            raise ValueError(f"Unknown operation: {op}")
         self.op = op
 
     def __str__(self) -> str:
@@ -50,26 +50,25 @@ class Operation:
             raise ValueError(f"Unknown operation: {self.op}")
 
     def get_prior(self) -> int:
-        if self.op in "()":
+        if self.op in ("(", ")"):
             return 0
-        elif self.op in "+":
+        elif self.op == "+":
             return 1
-        elif self.op in "*/%":
+        elif self.op in ("*", "/", "%"):
             return 2
         else:
             raise ValueError(f"Unknown operation: {self.op}")
 
     @staticmethod
     def is_op(op: str) -> bool:
-        return op in ["+", "*", "/", "%", "(", ")"]
+        return op in ("+", "*", "/", "%", "(", ")")
 
 
 class MathExpression:
     def __init__(self, expr: str) -> None:
         if not MathExpression.valid_parenthesis(expr):
             raise ValueError("Unbalanced Parenthesis")
-        self.infix = self.normalize(expr)
-        # print(f"{expr} => Normalized: {self.infix}")
+        self.infix = self._normalize(expr)
         self.idx = 0
 
     def __str__(self) -> str:
@@ -78,10 +77,9 @@ class MathExpression:
     def __repr__(self) -> str:
         return self.__str__()
 
-    def normalize(self, operation: str) -> str:
+    def _normalize(self, operation: str) -> str:
         # delete spaces
         operation = operation.replace(" ", "")
-
         # delete double negatives (-- => +)
         operation = operation.replace("--", "+")
         # normalize substraction form
@@ -90,43 +88,37 @@ class MathExpression:
         operation = sub(r"(\)|\d)-", r"\1+-", operation)
         # implicit multiplication in parenthesis
         operation = operation.replace(")(", ")*(")
-
         # manage multiplications of a number and a parenthesis
         operation = sub(r"(\d)\(", r"\1*(", operation)
         operation = sub(r"\)(\d)", r")*\1", operation)
-
         # manage negative parenthesis
         operation = operation.replace("-(", "-1*(")
-
         return operation
 
     def __next__(self) -> Operation | Operator:
-        try:
-            if self.idx >= len(self.infix):
-                self.idx = 0
-                raise StopIteration
-            token: str = self.infix[self.idx]
+        if self.idx >= len(self.infix):
+            self.idx = 0
+            raise StopIteration
 
+        token: str = self.infix[self.idx]
+        if Operation.is_op(token):
+            self.idx += 1
+            return Operation(token)
+
+        current = ""
+        while self.idx < len(self.infix):
+            token = self.infix[self.idx]
             if Operation.is_op(token):
-                self.idx += 1
-                return Operation(token)
+                break
+            current += token
+            self.idx += 1
 
-            current = ""
-            while self.idx < len(self.infix):
-                token = self.infix[self.idx]
-                if Operation.is_op(token):
-                    break
-                current += token
-                self.idx += 1
-
-            return Operator(current)
-        except Exception as excp:
-            raise excp
+        return Operator(current)
 
     def __iter__(self):
         return self
 
-    def to_postfix(self) -> List[Operation | Operator]:
+    def _to_postfix(self) -> List[Operation | Operator]:
         postfix: List[Operation | Operator] = []
         op_stack: List[Operation] = []
         for element in self:
@@ -148,15 +140,13 @@ class MathExpression:
                         while op_stack and op_stack[-1].op != "(" and prior_ok:
                             postfix.append(op_stack.pop())
                     op_stack.append(element)
-            # print(op_stack, postfix)
         while op_stack:
             if op_stack[-1].op != "(":
                 postfix.append(op_stack.pop())
-        # print(postfix)
         return postfix
 
     def evaluate(self) -> int:
-        postfix = self.to_postfix()
+        postfix = self._to_postfix()
         stack: List[int] = []
         for element in postfix:
             if isinstance(element, Operation):
@@ -166,7 +156,6 @@ class MathExpression:
                     stack.append(element(b, a))
                 except IndexError:
                     raise ValueError("Missing numbers in expression") from IndexError
-
             else:
                 stack.append(element.num)
         try:
@@ -187,6 +176,7 @@ class MathExpression:
                     ok = False
                     break
         return x == 0 and ok
+
 
 if __name__ == "__main__":
     expresion = input()
