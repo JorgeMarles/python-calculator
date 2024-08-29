@@ -1,8 +1,7 @@
 from typing import List, Tuple
 
+
 class Console:
-
-
     def read_string(self, msg: str = "") -> str:
         return input(msg)
 
@@ -15,18 +14,19 @@ class Console:
     def print(self, msg: str = "") -> None:
         print(msg)
 
-    def select_from_menu(self, title: str, opts: List[Tuple[str,str]]) -> str:
+    def select_from_menu(self, title: str, opts: List[Tuple[str, str]]) -> str:
         self.print(title)
-        for opt in opts: 
+        for opt in opts:
             self.print(f"{opt[0]}. {opt[1]}")
 
-        while True: 
+        while True:
             selected = self.read_string("Select an option: ")
             for opt in opts:
-                if opt[0] == selected: 
+                if opt[0] == selected:
                     return selected
-                
-if __name__=="__main__":
+
+
+if __name__ == "__main__":
     opts = []
     for i in range(4):
         opts.append((str(i), f"option{i}"))
@@ -34,4 +34,3 @@ if __name__=="__main__":
     c = Console()
     selected = c.select_from_menu("Example menu", opts)
     print(selected)
-        
