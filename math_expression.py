@@ -1,6 +1,5 @@
 from re import sub
 from typing import List
-from calc import Calculator
 
 class Operator:
     def __init__(self, num: str | float) -> None:
@@ -24,11 +23,10 @@ class Operator:
 
 
 class Operation:
-    def __init__(self, op: str, calc: Calculator) -> None:
+    def __init__(self, op: str) -> None:
         if not Operation.is_op(op):
             raise ValueError(f"Unknown operation: {op}")
         self.op = op
-        self.calc = calc
 
     def __str__(self) -> str:
         return self.op
@@ -38,13 +36,13 @@ class Operation:
 
     def __call__(self, a: float, b: float) -> float:
         if self.op == "+":
-            return self.calc.add(a, b)
+            return a+b
         elif self.op == "*":
-            return self.calc.mul(a, b)
+            return a*b
         elif self.op == "/":
-            return self.calc.div(a, b)
+            return a/b
         elif self.op == "%":
-            return self.calc.mod(a, b)
+            return a%b
         else:
             raise ValueError(f"Unknown operation: {self.op}")
 
@@ -64,11 +62,10 @@ class Operation:
 
 
 class MathExpression:
-    def __init__(self, expr: str, calc: Calculator) -> None:
+    def __init__(self, expr: str) -> None:
         if not MathExpression.valid_parenthesis(expr):
             raise ValueError("Unbalanced Parenthesis")
         self.infix = self._normalize(expr)
-        self.calc = calc
         self.idx = 0
 
     def __str__(self) -> str:
@@ -105,7 +102,7 @@ class MathExpression:
         token: str = self.infix[self.idx]
         if Operation.is_op(token):
             self.idx += 1
-            return Operation(token, self.calc)
+            return Operation(token)
 
         current = ""
         while self.idx < len(self.infix):
@@ -141,8 +138,9 @@ class MathExpression:
                         prior_ok = prior_elm <= prior_top
                         while op_stack and op_stack[-1].op != "(" and prior_ok:
                             postfix.append(op_stack.pop())
-                            prior_top = op_stack[-1].get_prior()
-                            prior_ok = prior_elm <= prior_top
+                            if op_stack:
+                                prior_top = op_stack[-1].get_prior()
+                                prior_ok = prior_elm <= prior_top
                     op_stack.append(element)
         while op_stack:
             if op_stack[-1].op != "(":

@@ -10,7 +10,7 @@ class Calculator:
     def mul(self, a: float, b: float) -> float:
         return a * b
 
-    def dive(self, a: float, b: float) -> float:
+    def div(self, a: float, b: float) -> float:
         self.check_divisor(b)
         return a / b
 
