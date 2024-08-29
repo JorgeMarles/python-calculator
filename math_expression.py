@@ -1,6 +1,6 @@
 from re import sub
 from typing import List
-
+from calc import Calculator
 
 class Operator:
     def __init__(self, num: str | float) -> None:
@@ -24,10 +24,11 @@ class Operator:
 
 
 class Operation:
-    def __init__(self, op: str) -> None:
+    def __init__(self, op: str, calc: Calculator) -> None:
         if not Operation.is_op(op):
             raise ValueError(f"Unknown operation: {op}")
         self.op = op
+        self.calc = calc
 
     def __str__(self) -> str:
         return self.op
@@ -37,13 +38,13 @@ class Operation:
 
     def __call__(self, a: float, b: float) -> float:
         if self.op == "+":
-            return a + b
+            return self.calc.add(a, b)
         elif self.op == "*":
-            return a * b
+            return self.calc.mul(a, b)
         elif self.op == "/":
-            return a / b
+            return self.calc.div(a, b)
         elif self.op == "%":
-            return a % b
+            return self.calc.mod(a, b)
         else:
             raise ValueError(f"Unknown operation: {self.op}")
 
