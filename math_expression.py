@@ -3,12 +3,12 @@ from typing import List
 
 
 class Operator:
-    def __init__(self, num: str | int) -> None:
-        self.num: int = 0
-        if isinstance(num, int) or Operator.isnumeric(num):
-            self.num = int(num)
+    def __init__(self, num: str | float) -> None:
+        self.num: float = 0
+        if isinstance(num, float) or Operator.isnumeric(num):
+            self.num = float(num)
         else:
-            raise ValueError(f"{num} does not represent an integer number")
+            raise ValueError(f"{num} does not represent a number")
 
     def __str__(self) -> str:
         return str(self.num)
@@ -19,10 +19,8 @@ class Operator:
     @staticmethod
     def isnumeric(s: str) -> bool:
         if s.startswith("-"):
-            return s[1:].isdigit()
-        # for floating point:
-        # s.replace('.', '', 1).isdigit()
-        return s.isdigit()
+            return Operator.isnumeric(s[1:])
+        return s.replace(".", "", 1).isdigit()
 
 
 class Operation:
@@ -37,19 +35,19 @@ class Operation:
     def __repr__(self) -> str:
         return self.__str__()
 
-    def __call__(self, a: int, b: int) -> int:
+    def __call__(self, a: float, b: float) -> float:
         if self.op == "+":
             return a + b
         elif self.op == "*":
             return a * b
         elif self.op == "/":
-            return a // b
+            return a / b
         elif self.op == "%":
             return a % b
         else:
             raise ValueError(f"Unknown operation: {self.op}")
 
-    def get_prior(self) -> int:
+    def get_prior(self) -> float:
         if self.op in ("(", ")"):
             return 0
         elif self.op == "+":
@@ -79,12 +77,12 @@ class MathExpression:
 
     def _normalize(self, operation: str) -> str:
         # delete spaces
-        operation = operation.replace(" ", "")
+        operation = sub(r"\s", "", operation)
         # delete double negatives (-- => +)
         operation = operation.replace("--", "+")
         # normalize substraction form
         operation = operation.replace("+-", "-")
-        # convert substraction from x-y to x+-y
+        # convert substraction form (x-y => x+-y)
         operation = sub(r"(\)|\d)-", r"\1+-", operation)
         # implicit multiplication in parenthesis
         operation = operation.replace(")(", ")*(")
@@ -93,6 +91,8 @@ class MathExpression:
         operation = sub(r"\)(\d)", r")*\1", operation)
         # manage negative parenthesis
         operation = operation.replace("-(", "-1*(")
+        # manage reduntand positives (+a) => (a)
+        operation = sub(r"(\(|^)\+(\d)", r"\1\2", operation)
         return operation
 
     def __next__(self) -> Operation | Operator:
@@ -139,15 +139,17 @@ class MathExpression:
                         prior_ok = prior_elm <= prior_top
                         while op_stack and op_stack[-1].op != "(" and prior_ok:
                             postfix.append(op_stack.pop())
+                            prior_top = op_stack[-1].get_prior()
+                            prior_ok = prior_elm <= prior_top
                     op_stack.append(element)
         while op_stack:
             if op_stack[-1].op != "(":
                 postfix.append(op_stack.pop())
         return postfix
 
-    def evaluate(self) -> int:
+    def evaluate(self) -> float:
         postfix = self._to_postfix()
-        stack: List[int] = []
+        stack: List[float] = []
         for element in postfix:
             if isinstance(element, Operation):
                 try:
@@ -182,6 +184,7 @@ if __name__ == "__main__":
     expresion = input()
     try:
         mathexp = MathExpression(expresion)
+        # print("infix ="," ".join([str(el) for el in mathexp]))
         print(mathexp.evaluate())
     except Exception as excp:
         print(f"{type(excp).__name__}: {excp}")
