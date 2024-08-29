@@ -64,10 +64,11 @@ class Operation:
 
 
 class MathExpression:
-    def __init__(self, expr: str) -> None:
+    def __init__(self, expr: str, calc: Calculator) -> None:
         if not MathExpression.valid_parenthesis(expr):
             raise ValueError("Unbalanced Parenthesis")
         self.infix = self._normalize(expr)
+        self.calc = calc
         self.idx = 0
 
     def __str__(self) -> str:
@@ -104,7 +105,7 @@ class MathExpression:
         token: str = self.infix[self.idx]
         if Operation.is_op(token):
             self.idx += 1
-            return Operation(token)
+            return Operation(token, self.calc)
 
         current = ""
         while self.idx < len(self.infix):
